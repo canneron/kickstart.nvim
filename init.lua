@@ -90,6 +90,31 @@ P.S. You can delete this when you're done too. It's your config now! :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'java',
+  callback = function()
+    vim.keymap.set('n', '<leader>m', function()
+      -- Find the project root (directory with pom.xml)
+      local cwd = vim.fn.getcwd()
+      local root = cwd
+      while root ~= '/' and vim.fn.glob(root .. '/pom.xml') == '' do
+        root = vim.fn.fnamemodify(root, ':h')
+      end
+
+      if root == '/' then
+        print 'No pom.xml found in any parent directory.'
+        return
+      end
+
+      -- Open terminal in vertical split and run mvn command
+      vim.cmd 'vsplit'
+      vim.cmd 'wincmd l' -- move to the new split
+      vim.cmd 'term' -- open terminal
+      vim.cmd 'startinsert'
+      vim.fn.chansend(vim.b.terminal_job_id, 'cd ' .. root .. ' && mvn clean install\n')
+    end, { buffer = true, desc = 'Run Maven from project root' })
+  end,
+})
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
@@ -167,6 +192,9 @@ vim.opt.confirm = true
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+vim.keymap.set('i', 'jj', '<Esc>', { noremap = true })
+vim.keymap.set('t', 'jj', [[<C-\><C-n>]], { noremap = true })
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -274,6 +302,18 @@ require('lazy').setup({
         changedelete = { text = '~' },
       },
     },
+  },
+  {
+    'nvim-tree/nvim-tree.lua',
+    version = '*',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('nvim-tree').setup {
+        renderer = {
+          group_empty = true,
+        },
+      }
+    end,
   },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
