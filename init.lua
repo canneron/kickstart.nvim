@@ -308,10 +308,18 @@ require('lazy').setup({
     version = '*',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
+      local api = require("nvim-tree.api")
       require('nvim-tree').setup {
         renderer = {
           group_empty = true,
         },
+        on_attach = function(bufnr)
+            api.config.mappings.default_on_attach(bufnr)
+
+          vim.keymap.set("n", "]", function() api.node.open.vertical() end, { buffer = bufnr, desc = "Vertical" })
+          vim.keymap.set("n", "s", function() api.node.open.horizontal() end, { buffer = bufnr, desc = "Horizontal" })
+          vim.keymap.set("n", "t", function() api.node.open.tab() end, { buffer = bufnr, desc = "New Tab" })
+        end,
       }
     end,
   },
